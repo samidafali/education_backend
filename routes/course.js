@@ -11,7 +11,7 @@ const {
   getEnrolledCourses,
   enrollInCourse,
   createCheckoutSession,
-  getCourseVideos
+  getCourseVideos,
 } = require("../controllers/courseController.js");
 const adminAuth = require("../middleware/adminMiddleware");
 const multer = require("multer");
@@ -25,6 +25,7 @@ const router = express.Router();
 router.get("/", getAllCourses);
 router.get("/admin/all", adminAuth, getAllCourses);
 router.get("/:id", getCourseById);
+
 
 // Protected routes for admins and teachers
 router.post(
@@ -40,7 +41,6 @@ router.post(
 
 router.put(
   "/:id",
-  adminAuth,
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "videos", maxCount: 5 },
@@ -48,6 +48,7 @@ router.put(
   ]),
   updateCourse
 );
+
 
 router.delete("/:id", adminAuth, deleteCourse);
 router.put("/:id/addTeacher", adminAuth, addTeacherToCourse);

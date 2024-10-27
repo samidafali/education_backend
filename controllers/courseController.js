@@ -221,74 +221,70 @@ const createCourse = asyncHandler(async (req, res) => {
 // Update a course (Admin or Teacher who is assigned or created the course)
 
 
+// controllers/courseController.js
+
 const updateCourse = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { coursename, description, schedule, difficulty, isFree, price, category } = req.body;
-  const user = req.admin || req.teacher;
-
-  if (!user) {
-    throw new ApiError(403, "User not found or role is not defined");
-  }
+  const { coursename, description, schedule, difficulty, isFree, price, category, videoTitles } = req.body;
 
   const existingCourse = await Course.findById(id);
   if (!existingCourse) {
     throw new ApiError(404, "Course not found or could not be updated");
   }
 
-  if (checkRole(user, 'admin') || (checkRole(user, 'teacher') && existingCourse.enrolledteacher.toString() === user._id.toString())) {
-    const updateFields = {
-      coursename,
-      description,
-      difficulty,
-      isFree: isFree === "true",
-      price: isFree === "false" ? price : 0,
-      category,
-    };
+  const updateFields = {
+    coursename,
+    description,
+    difficulty,
+    isFree: isFree === "true",
+    price: isFree === "false" ? price : 0,
+    category,
+  };
 
-    if (schedule) {
-      try {
-        updateFields.schedule = JSON.parse(schedule);
-      } catch (err) {
-        throw new ApiError(400, "Invalid schedule format");
-      }
+  if (schedule) {
+    try {
+      updateFields.schedule = JSON.parse(schedule);
+    } catch (err) {
+      throw new ApiError(400, "Invalid schedule format");
     }
-
-    // Handle image, video, and PDF updates
-    if (req.files && req.files.image) {
-      const imageResult = await cloudinary.uploader.upload(req.files.image[0].path, {
-        folder: "courses",
-        resource_type: "image",
-      });
-      updateFields.imageUrl = imageResult.secure_url;
-    }
-
-    if (req.files && req.files.videos) {
-      const videos = [];
-      for (let i = 0; i < req.files.videos.length; i++) {
-        const video = req.files.videos[i];
-        const videoResult = await cloudinary.uploader.upload(video.path, {
-          folder: "courses/videos",
-          resource_type: "video",
-        });
-        videos.push({ url: videoResult.secure_url, title: videoTitles[i] });
-      }
-      updateFields.videos = videos;
-    }
-
-    if (req.files && req.files.pdf) {
-      const pdfResult = await cloudinary.uploader.upload(req.files.pdf[0].path, {
-        folder: "courses/pdf",
-        resource_type: "raw",
-      });
-      updateFields.pdfUrl = pdfResult.secure_url; // Update the PDF URL
-    }
-
-    const updatedCourse = await Course.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
-    return res.status(200).json(new ApiResponse(200, updatedCourse, "Course updated successfully"));
-  } else {
-    throw new ApiError(403, "Access denied, you are not authorized to update this course");
   }
+
+  // Gérer les mises à jour des images, vidéos et PDF
+  if (req.files && req.files.image) {
+    const imageResult = await cloudinary.uploader.upload(req.files.image[0].path, {
+      folder: "courses",
+      resource_type: "image",
+    });
+    updateFields.imageUrl = imageResult.secure_url;
+  }
+
+  if (req.files && req.files.videos) {
+    const videos = [];
+    for (let i = 0; i < req.files.videos.length; i++) {
+      const video = req.files.videos[i];
+      const videoResult = await cloudinary.uploader.upload(video.path, {
+        folder: "courses/videos",
+        resource_type: "video",
+      });
+      videos.push({ url: videoResult.secure_url, title: videoTitles[i] });
+    }
+    updateFields.videos = videos;
+  }
+
+  if (req.files && req.files.pdf) {
+    const pdfResult = await cloudinary.uploader.upload(req.files.pdf[0].path, {
+      folder: "courses/pdf",
+      resource_type: "raw",
+    });
+    updateFields.pdfUrl = pdfResult.secure_url; // Mettre à jour l'URL du PDF
+  }
+
+  const updatedCourse = await Course.findByIdAndUpdate(id, { $set: updateFields }, { new: true })
+    .populate('enrolledteacher', 'firstName lastName email');
+
+  return res.status(200).json(new ApiResponse(200, updatedCourse, "Course updated successfully"));
 });
+
 
 
 
@@ -576,6 +572,9 @@ const createCheckoutSession = async (req, res) => {
 
 
 
+// Route for course recommendations based on quiz score
+
+
 
 
 
@@ -593,5 +592,5 @@ module.exports = {
   getEnrolledCourses,
   enrollInCourse,
   createCheckoutSession,
-  getCourseVideos
+  getCourseVideos,
 };

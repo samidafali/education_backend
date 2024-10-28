@@ -16,7 +16,7 @@ connection();
 // middlewares
 app.use(express.json());
 const corsOptions = {
-  origin: 'http://localhost:3000', // The origin you want to allow
+  //origin: 'http://localhost:3000', // The origin you want to allow
   methods: ['GET', 'POST', 'PATCH','PUT', 'DELETE'], // Allow these methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Allow these headers
 };

@@ -1,5 +1,5 @@
 const Admin = require("../models/admin");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
 const asyncHandler = require("express-async-handler");

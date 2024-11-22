@@ -1,6 +1,7 @@
 
 const mongoose = require('mongoose');
 const { Course } = require("../models/course.js");
+const Message = require("../models/message");
 const { asyncHandler } = require("../utils/asyncHandler.js");
 const { ApiError } = require("../utils/ApiError.js"); 
 const { ApiResponse } = require("../utils/ApiResponse.js");
@@ -21,7 +22,7 @@ const checkRole = (user, role) => {
 };
 
 
-// Récupérer tous les cours approuvés
+
 // Récupérer tous les cours
 const getAllCourses = asyncHandler(async (req, res) => {
   const user = req.admin || req.teacher || req.user;
@@ -85,12 +86,11 @@ const getCourseById = asyncHandler(async (req, res) => {
 // Fetch course videos for enrolled users
 const getCourseVideos = asyncHandler(async (req, res) => {
   const { courseId } = req.params;
-  const user = req.student; // Assuming `studentAuth` middleware is used
+  const user = req.student; 
 
   console.log("Course ID:", courseId);
   console.log("User from token:", user);
 
-  // Find the course by ID
   const course = await Course.findById(courseId)
     .select('videos enrolledUsers');
 
@@ -98,13 +98,11 @@ const getCourseVideos = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "Course not found" });
   }
 
-  // Check if the user is enrolled in the course
   const isEnrolled = course.enrolledUsers.includes(user._id);
   if (!isEnrolled) {
     return res.status(403).json({ message: "Access denied. You are not enrolled in this course." });
   }
 
-  // Return videos to the enrolled user
   return res.status(200).json({ videos: course.videos });
 });
 
@@ -118,8 +116,7 @@ const getCourseVideos = asyncHandler(async (req, res) => {
 
 
 // Créer un nouveau cours (Admin ou Teacher)
-// Créer un nouveau cours (Admin ou Teacher)
-// Créer un nouveau cours (Admin ou Teacher)
+
 const createCourse = asyncHandler(async (req, res) => {
   try {
     const {
@@ -131,7 +128,7 @@ const createCourse = asyncHandler(async (req, res) => {
       isFree,
       price,
       category,
-      enrolledteacher // Expecting this to be a single teacher ID
+      enrolledteacher 
     } = req.body;
 
     if (!category) {
@@ -145,7 +142,6 @@ const createCourse = asyncHandler(async (req, res) => {
     let videos = [];
     let pdfUrl = null;
 
-    // Handle image upload
     if (req.files && req.files.image) {
       const imageResult = await cloudinary.uploader.upload(req.files.image[0].path, {
         folder: "courses",
@@ -154,7 +150,6 @@ const createCourse = asyncHandler(async (req, res) => {
       imageUrl = imageResult.secure_url;
     }
 
-    // Handle video uploads
     if (req.files && req.files.videos) {
       for (let i = 0; i < req.files.videos.length; i++) {
         const video = req.files.videos[i];
@@ -166,7 +161,6 @@ const createCourse = asyncHandler(async (req, res) => {
       }
     }
 
-    // Handle PDF upload
     if (req.files && req.files.pdf) {
       const pdfResult = await cloudinary.uploader.upload(req.files.pdf[0].path, {
         folder: "courses/pdf",
@@ -175,7 +169,6 @@ const createCourse = asyncHandler(async (req, res) => {
       pdfUrl = pdfResult.secure_url;
     }
 
-    // Create a new course
     const newCourse = await Course.create({
       coursename,
       description,
@@ -188,13 +181,12 @@ const createCourse = asyncHandler(async (req, res) => {
       price: coursePrice,
       category,
       isapproved: true,
-      enrolledteacher: [enrolledteacher] // Ensure this is an array
+      enrolledteacher: [enrolledteacher] 
     });
 
-    // Populate the enrolled teacher for the newly created course
     const createdCourse = await Course.findById(newCourse._id).populate('enrolledteacher', 'firstName lastName email');
 
-    console.log("Created course with populated teacher:", createdCourse); // Log the populated course details
+    console.log("Created course with populated teacher:", createdCourse); 
 
     return res.status(201).json(new ApiResponse(201, createdCourse, "New course created successfully."));
   } catch (error) {
@@ -213,15 +205,9 @@ const createCourse = asyncHandler(async (req, res) => {
 
 
 
-// Mettre à jour les informations d'un cours (Admin ou Teacher qui a créé le cours)
-// Mettre à jour les informations d'un cours (Admin ou Teacher qui a créé le cours)
-// Mettre à jour les informations d'un cours (Admin ou Teacher qui a créé le cours)
 
-// Update a course (Admin or Teacher)
-// Update a course (Admin or Teacher who is assigned or created the course)
+// Update a course (Admin or Teacher )
 
-
-// controllers/courseController.js
 
 const updateCourse = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -276,7 +262,7 @@ const updateCourse = asyncHandler(async (req, res) => {
       folder: "courses/pdf",
       resource_type: "raw",
     });
-    updateFields.pdfUrl = pdfResult.secure_url; // Mettre à jour l'URL du PDF
+    updateFields.pdfUrl = pdfResult.secure_url;
   }
 
   const updatedCourse = await Course.findByIdAndUpdate(id, { $set: updateFields }, { new: true })
@@ -284,25 +270,6 @@ const updateCourse = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, updatedCourse, "Course updated successfully"));
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-
-
-
-
 
 
 
@@ -331,7 +298,7 @@ const deleteCourse = asyncHandler(async (req, res) => {
 // Approuver un cours (admin uniquement)
 const approveCourse = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { isapproved } = req.body;  // Expecting either `true` or `false` for approval status
+  const { isapproved } = req.body;  
 
   const user = req.admin || req.user;
 
@@ -360,8 +327,8 @@ const approveCourse = asyncHandler(async (req, res) => {
 
 // Ajouter un enseignant à un cours
 const addTeacherToCourse = asyncHandler(async (req, res) => {
-  const { id } = req.params; // Course ID
-  const { teacherId } = req.body; // Teacher ID
+  const { id } = req.params; 
+  const { teacherId } = req.body; 
 
   console.log("AddTeacherToCourse Function Called");
   console.log("Course ID:", id);
@@ -372,10 +339,9 @@ const addTeacherToCourse = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Teacher ID is required");
   }
 
-  // Check if the teacher exists
   console.log("Checking if Teacher exists...");
   const teacher = await Teacher.findById(teacherId);
-  console.log("Teacher:", teacher); // Log the teacher found (if any)
+  console.log("Teacher:", teacher); 
 
   if (!teacher) {
     console.log("Teacher not found");
@@ -455,23 +421,31 @@ const addUserToCourse = asyncHandler(async (req, res) => {
 const getEnrolledCourses = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
 
+  console.log(`[BACKEND] Fetching courses for student ID: ${studentId}`);
+
   const user = await User.findById(studentId);
   if (!user) {
+    console.error(`[BACKEND] User not found for ID: ${studentId}`);
     throw new ApiError(404, "User not found");
   }
 
-  // Select enrolled courses and include `pdfUrl` along with other fields
   const enrolledCourses = await Course.find({ enrolledUsers: studentId })
-    .select("coursename description imageUrl pdfUrl"); // Ensure pdfUrl is included
+    .populate('enrolledteacher', 'firstName lastName email') // Populate teacher details
+    .select("coursename description imageUrl pdfUrl enrolledteacher");
 
   if (!enrolledCourses || enrolledCourses.length === 0) {
+    console.warn(`[BACKEND] No courses found for student ID: ${studentId}`);
     throw new ApiError(404, "No courses found for the specified user");
   }
+
+  console.log(`[BACKEND] Enrolled courses fetched: ${JSON.stringify(enrolledCourses, null, 2)}`);
 
   return res
     .status(200)
     .json(new ApiResponse(200, enrolledCourses, "Enrolled courses fetched successfully"));
 });
+
+
 
 
 
@@ -549,7 +523,7 @@ const createCheckoutSession = async (req, res) => {
     await course.save();
 
     console.log(`User ${user.email} successfully enrolled in the course ${course.coursename}`);
-    console.log("Enrolled users after saving:", course.enrolledUsers); // Log enrolled users after saving
+    console.log("Enrolled users after saving:", course.enrolledUsers); 
 
     // Send confirmation email after enrollment
     await sendMail(
@@ -574,8 +548,138 @@ const createCheckoutSession = async (req, res) => {
 
 // Route for course recommendations based on quiz score
 
+const sendMessage = asyncHandler(async (req, res) => {
+  const { courseId, teacherId, content } = req.body;
+  const user = req.student;
+
+  if (!user || !teacherId || !courseId || !content) {
+    throw new ApiError(400, "Tous les champs sont requis.");
+  }
+
+  const course = await Course.findById(courseId);
+  if (!course || !course.enrolledUsers.includes(user._id)) {
+    throw new ApiError(403, "Vous n'êtes pas inscrit à ce cours.");
+  }
+
+  if (!course.enrolledteacher.includes(teacherId)) {
+    throw new ApiError(404, "Enseignant non trouvé dans ce cours.");
+  }
+
+  const message = await Message.create({
+    sender: user._id,
+    receiver: teacherId,
+    course: courseId,
+    content,
+  });
+
+  res.status(201).json({ message: "Message envoyé avec succès.", data: message });
+});
+
+// Récupérer les messages entre un utilisateur et un enseignant
+const getMessages = asyncHandler(async (req, res) => {
+  const { courseId, teacherId } = req.params;
+  const user = req.student;
+
+  if (!user || !teacherId || !courseId) {
+    throw new ApiError(400, "Tous les champs sont requis.");
+  }
+
+  const course = await Course.findById(courseId);
+  if (!course || !course.enrolledUsers.includes(user._id)) {
+    throw new ApiError(403, "Vous n'êtes pas inscrit à ce cours.");
+  }
+
+  const messages = await Message.find({
+    course: courseId,
+    $or: [
+      { sender: user._id, receiver: teacherId },
+      { sender: teacherId, receiver: user._id },
+    ],
+  }).sort({ timestamp: 1 });
+
+  res.status(200).json({ messages });
+});
+
+// Répondre à un message
+const replyMessage = asyncHandler(async (req, res) => {
+  const { messageId, content } = req.body;
+  const teacher = req.teacher;
+
+  if (!teacher || !messageId || !content) {
+    throw new ApiError(400, "All fields are required.");
+  }
+
+  const originalMessage = await Message.findById(messageId);
+  if (!originalMessage) {
+    throw new ApiError(404, "Message not found.");
+  }
+
+  let pdfUrl = null;
+
+  // Handle PDF file upload
+  if (req.file) {
+    const pdfResult = await cloudinary.uploader.upload(req.file.path, {
+      folder: "messages/pdf",
+      resource_type: "raw", 
+    });
+    pdfUrl = pdfResult.secure_url;
+  }
+
+  const reply = await Message.create({
+    sender: teacher._id,
+    receiver: originalMessage.sender,
+    course: originalMessage.course,
+    content,
+    pdfUrl, 
+  });
+
+  res.status(201).json({ message: "Reply sent successfully.", data: reply });
+});
 
 
+
+
+
+const getMessagesForTeacher = asyncHandler(async (req, res) => {
+  const teacher = req.teacher;
+
+  if (!teacher) {
+    throw new ApiError(403, "Unauthorized. You must be logged in as a teacher.");
+  }
+
+  const messages = await Message.find({ receiver: teacher._id })
+    .populate("sender", "firstName lastName email") // Populate sender details
+    .populate("course", "coursename description") // Populate course details
+    .sort({ timestamp: -1 });
+
+  if (!messages.length) {
+    return res.status(404).json(new ApiResponse(404, null, "No messages found for this teacher."));
+  }
+
+  res.status(200).json(new ApiResponse(200, messages, "Messages retrieved successfully."));
+});
+
+const getMessagesForStudent = asyncHandler(async (req, res) => {
+  const user = req.student; // Assuming studentAuth middleware is used
+  const { courseId, teacherId } = req.params;
+
+  if (!user || !courseId || !teacherId) {
+    throw new ApiError(400, "All fields are required.");
+  }
+
+  const course = await Course.findById(courseId);
+  if (!course || !course.enrolledUsers.includes(user._id)) {
+    throw new ApiError(403, "You are not enrolled in this course.");
+  }
+
+  const messages = await Message.find({
+    course: courseId,
+    sender: teacherId,
+    receiver: user._id,
+  }).sort({ timestamp: 1 });
+
+  res.status(200).json({ messages });
+});
 
 
 
@@ -593,4 +697,10 @@ module.exports = {
   enrollInCourse,
   createCheckoutSession,
   getCourseVideos,
+  sendMessage,
+  getMessages,
+  replyMessage,
+  getMessagesForTeacher,
+  getMessagesForStudent,
+
 };

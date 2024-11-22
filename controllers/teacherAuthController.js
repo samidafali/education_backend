@@ -29,7 +29,7 @@ const teacherRegister = async (req, res) => {
     await token.save();
 
     // Send verification email
-    const url = `https://frontend-2glj.onrender.com/teachers/${teacher._id}/verify/${token.token}`;
+    const url = `http://localhost:3000/teachers/${teacher._id}/verify/${token.token}`;
     await sendEmail(teacher.email, "Verify Your Email", url);
 
     res.status(201).json({ message: "Teacher registered successfully, please verify your email." });

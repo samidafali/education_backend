@@ -3,14 +3,13 @@ const Admin = require("../models/admin");
 const Teacher = require("../models/teacher");
 
 const adminAuth = async (req, res, next) => {
-    const token = req.headers.authorization && req.headers.authorization.split(' ')[1]; // Extract the Bearer token
+    const token = req.headers.authorization && req.headers.authorization.split(' ')[1]; 
 
     if (!token) {
         return res.status(401).json({ message: 'Access denied, no token provided' });
     }
 
     try {
-        // Verify the token using JWTPRIVATEKEY
         const decoded = jwt.verify(token, process.env.JWTPRIVATEKEY);
         console.log('Decoded Token:', decoded);
 
@@ -21,9 +20,9 @@ const adminAuth = async (req, res, next) => {
             if (!teacher) {
                 return res.status(401).json({ message: 'Access denied, admin or teacher not found' });
             }
-            req.teacher = teacher; // Set teacher in request
+            req.teacher = teacher;
         } else {
-            req.admin = admin; // Set admin in request
+            req.admin = admin; 
         }
 
         next();

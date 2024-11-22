@@ -12,6 +12,11 @@ const {
   enrollInCourse,
   createCheckoutSession,
   getCourseVideos,
+  sendMessage,
+  getMessages,
+  replyMessage,
+  getMessagesForTeacher,
+  getMessagesForStudent,
 } = require("../controllers/courseController.js");
 const adminAuth = require("../middleware/adminMiddleware");
 const multer = require("multer");
@@ -62,5 +67,19 @@ router.post('/:courseId/create-checkout-session', studentAuth, (req, res, next) 
 router.get('/:courseId/videos', studentAuth, getCourseVideos);
 router.get('/students/:studentId/courses', studentAuth, getEnrolledCourses);
 
+// Envoyer un message
+router.post("/messages", studentAuth, sendMessage);
 
+// Récupérer les messages
+router.get("/messages/:courseId/:teacherId", studentAuth, getMessages);
+
+// Répondre à un message
+router.post(
+  "/messages/reply",
+  adminAuth,
+  upload.single("pdf"), // Handle a single PDF file upload
+  replyMessage
+);
+router.get("/messages/teacher", adminAuth, getMessagesForTeacher);
+router.get("/messages/student/:courseId/:teacherId", studentAuth, getMessagesForStudent);
 module.exports = router;

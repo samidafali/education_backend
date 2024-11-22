@@ -9,7 +9,6 @@ const adminRoutes = require("./routes/admin");
 const teacherRoutes = require("./routes/teacher");
 const courseRoutes = require("./routes/course");
 const studentRoutes = require("./routes/student");
-
 // database connection
 connection();
 
